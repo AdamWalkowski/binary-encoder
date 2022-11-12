@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Sinch.Encoding.Tests\**" />
+    <Compile Remove="Sinch.Encoding\**" />
+    <EmbeddedResource Remove="Sinch.Encoding.Tests\**" />
+    <EmbeddedResource Remove="Sinch.Encoding\**" />
+    <None Remove="Sinch.Encoding.Tests\**" />
+    <None Remove="Sinch.Encoding\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Sinch.Encoding\Sinch.Encoding.csproj" />
+  </ItemGroup>
+
+</Project>
