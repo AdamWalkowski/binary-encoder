@@ -13,36 +13,22 @@ var message = new SignalMessage
     Payload = new byte[] { 0b00100011, 0b00011010, 0b00100011 }
 };
 
+Console.WriteLine($"This is object before encoding: ${JsonSerializer.Serialize(message, new JsonSerializerOptions { WriteIndented = true })}\n");
 
-Console.WriteLine($"This is object before encoding: ${JsonSerializer.Serialize(message, new JsonSerializerOptions { WriteIndented = true })}");
-
-
-var encoder = new MessageEncoder();
+var byteEncoder = new ByteBufferBuilder();
+var encoder = new SignalMessageCodec(byteEncoder);
 
 try
 {
     var encodedMessage = encoder.Encode(message);
-    if (encodedMessage != null)
-    {
-        Console.WriteLine($"This is encoded message: ${encodedMessage.ToString()}");
-    }
 
-    try
-    {
-        var decodedMessage = encoder.Decode(encodedMessage);
+    Console.WriteLine($"This is encoded stream: ${Convert.ToHexString(encodedMessage)}\n");
 
+    var decodedMessage = encoder.Decode(encodedMessage);
 
-        Console.WriteLine($"This is decoded object: ${decodedMessage.ToString()}");
-
-
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Cannot decode message: {ex.Message}");
-    }
+    Console.WriteLine($"This is object after decoding: ${JsonSerializer.Serialize(decodedMessage, new JsonSerializerOptions { WriteIndented = true })}\n");
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Cannot encode message: {ex.Message}");
+    Console.WriteLine($"Something happened: {ex.Message}");
 }
-

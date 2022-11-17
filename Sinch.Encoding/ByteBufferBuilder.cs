@@ -1,77 +1,122 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Sinch.Encoding
+﻿namespace Sinch.Encoding
 {
-    public class ByteBufferBuilder
+    public class ByteBufferBuilder : IByteBufferBuilder
     {
-        public byte[] MergeBuffers(byte[] first, byte[] second, byte separator)
+        public byte[] GetBytes(string input)
         {
-            byte[] result = new byte[first.Length + second.Length + 1];
-            Buffer.BlockCopy(first, 0, result, 0, first.Length);
-            result[first.Length] = separator;
-            Buffer.BlockCopy(second, 0, result, first.Length + 1, second.Length);
-            return result;
-        }
-
-        public byte[] MergeBuffers(byte[] head, byte[] first, byte[] second)
-        {
-            byte[] result = new byte[head.Length + first.Length + second.Length];
-            Buffer.BlockCopy(head, 0, result, 0, head.Length);
-            Buffer.BlockCopy(first, 0, result, head.Length, first.Length);
-            Buffer.BlockCopy(second, 0, result, head.Length + first.Length, second.Length);
-            return result;
-        }
-
-        public byte[] JoinBuffers(IEnumerable<byte[]> buffers, byte separator)
-        {
-            long separatorsLenght = buffers.Count() - 1;
-            int len = buffers.Sum(x => x.Length);
-            byte[] result = new byte[len + separatorsLenght];
-
-            int resultCursor = 0;
-            foreach (var buffer in buffers)
+            try
             {
-                Buffer.BlockCopy(buffer, 0, result, resultCursor, buffer.Length);
-                resultCursor += buffer.Length;
-                if (resultCursor < len + separatorsLenght)
+                byte[] encodedString = new byte[input.Length];
+                for (int index = 0; index < input.Length; index++)
                 {
-                    result[resultCursor] = separator;
-                    resultCursor++;
+                    encodedString[index] = (byte)input[index];
+                }
+
+                return encodedString;
+            }
+            catch (Exception e)
+            {
+                throw new InvalidDataException($"Error while converting to bytes array: {e.Message}");
+            }
+        }
+
+        public byte[] GetBytes(int input)
+        {
+            return BitConverter.GetBytes(input);
+        }
+
+        public byte[] GetBytes(short input)
+        {
+            return BitConverter.GetBytes(input);
+        }
+
+        public int GetInteger(byte[] source, in int startIndex)
+        {
+            return BitConverter.ToInt32(source, startIndex);
+        }
+
+        public short GetShort(byte[] source, in int startIndex)
+        {
+            return BitConverter.ToInt16(source, startIndex);
+        }
+
+        public byte[] AllocateBuffer(params int[] sizes)
+        {
+            try
+            {
+                int fullLength = sizes.Sum();
+                byte[] buffer = new byte[fullLength];
+                return buffer;
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException($"cannot allocate buffer: {e.Message}");
+            }
+        }
+
+        public byte[] JoinBuffers(params byte[][] buffers)
+        {
+            try
+            {
+                int len = buffers.Sum(x => x.Length);
+                byte[] target = new byte[len];
+                int resultCursor = 0;
+
+                foreach (var buffer in buffers)
+                {
+                    Buffer.BlockCopy(buffer, 0, target, resultCursor, buffer.Length);
+                    resultCursor += buffer.Length;
+                }
+
+                return target;
+            }
+            catch (Exception e)
+            {
+                throw new InvalidDataException($"Error while joining byte streams: {e.Message}");
+            }
+
+        }
+
+        public byte[] CopyFromStream(in byte[] stream, in int startIndex, in int? length = null)
+        {
+            try
+            {
+                int substreamLength = length ?? stream.Length - startIndex;
+                byte[] buffer = new byte[substreamLength];
+                Buffer.BlockCopy(stream, startIndex, buffer, 0, substreamLength);
+                return buffer;
+            }
+            catch (Exception e)
+            {
+                throw new InvalidDataException($"Error while copying byte streams: {e.Message}");
+            }
+        }
+
+        public void CopyBuffersIntoTarget(in byte[] target, byte[]? head = null, params byte[]?[] buffers)
+        {
+            try
+            {
+                int resultCursor = 0;
+
+                if (head != null)
+                {
+                    Buffer.BlockCopy(head, 0, target, 0, head.Length);
+                    resultCursor = head.Length;
+                }
+
+                foreach (var buffer in buffers)
+                {
+                    if (buffer != null && buffer.Length > 0)
+                    {
+                        Buffer.BlockCopy(buffer, 0, target, resultCursor, buffer.Length);
+                        resultCursor += buffer.Length;
+                    }
                 }
             }
-
-            return result;
-        }
-
-        public byte[] JoinBuffers(IEnumerable<byte[]> buffers)
-        {
-            int len = buffers.Sum(x => x.Length);
-            byte[] result = new byte[len];
-
-            int resultCursor = 0;
-            foreach (var buffer in buffers)
+            catch (Exception e)
             {
-                Buffer.BlockCopy(buffer, 0, result, resultCursor, buffer.Length);
-                resultCursor += buffer.Length;
+                throw new InvalidDataException($"Error while copying byte streams: {e.Message}");
             }
-
-            return result;
         }
-
-
-        //public byte[] ConvertToBytes(string value)
-        //{
-
-        //}
-
-        //public string ConvertToString(byte[] value)
-        //{
-
-        //}
-
     }
 }
